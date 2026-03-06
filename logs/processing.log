@@ -14,3 +14,6 @@
 2026-03-07 00:33:27,677 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
 2026-03-07 00:33:27,696 - AFC is enabled with max remote calls: 10.
 2026-03-07 00:33:31,800 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-03-07 00:43:49,883 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-07 00:43:49,899 - AFC is enabled with max remote calls: 10.
+2026-03-07 00:43:53,576 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"

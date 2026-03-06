@@ -157,6 +157,7 @@ def extract_invoice_data(invoice_text):
 if __name__ == "__main__":
 
     from document_processing.document_reader import read_document
+    from database.store import save_invoice
 
     sample_file = "bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf"
 
@@ -165,3 +166,5 @@ if __name__ == "__main__":
     data = extract_invoice_data(text)
 
     print(json.dumps(data, indent=2))
+
+    save_invoice(data, sample_file)
