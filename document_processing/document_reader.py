@@ -3,14 +3,39 @@ import fitz
 import pytesseract
 from PIL import Image
 from pdf2image import convert_from_path
+from sqlalchemy import text
+import logging
+logging.basicConfig(
+    filename="logs/processing.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s"
+)
 
 def ocr_image(image_path):
 
-    img = Image.open(image_path)
+    try:
+        img = Image.open(image_path)
+        text = pytesseract.image_to_string(img)
+        return text
 
-    text = pytesseract.image_to_string(img)
+    except Exception as e:
+        print("OCR failed:", e)
+        return ""
 
-    return text
+
+
+def clean_text(text):
+
+    lines = text.split("\n")
+
+    cleaned = []
+
+    for line in lines:
+        line = line.strip()
+        if line:
+            cleaned.append(line)
+
+    return "\n".join(cleaned)
 
 def extract_text_from_pdf(pdf_path):
 
@@ -39,19 +64,22 @@ def read_document(file_path):
     extension = os.path.splitext(file_path)[1].lower()
 
     text = ""
-
+    logging.info(f"Processing document: {file_path}")
     if extension == ".pdf":
 
         text = extract_text_from_pdf(file_path)
 
         if len(text.strip()) < 50:
             print("PDF appears scanned, running OCR...")
+            
+            logging.info("OCR triggered for scanned PDF")
             text = ocr_pdf(file_path)
 
     elif extension in [".png", ".jpg", ".jpeg"]:
 
         text = ocr_image(file_path)
 
+    text = clean_text(text)
     return text
 
 if __name__ == "__main__":
