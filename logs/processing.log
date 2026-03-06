@@ -1,1 +1,16 @@
 2026-03-06 21:29:01,100 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-06 23:36:23,897 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-06 23:36:23,913 - AFC is enabled with max remote calls: 10.
+2026-03-06 23:36:24,410 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent "HTTP/1.1 404 Not Found"
+2026-03-06 23:37:51,175 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-06 23:37:51,193 - AFC is enabled with max remote calls: 10.
+2026-03-06 23:37:51,766 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent "HTTP/1.1 404 Not Found"
+2026-03-06 23:38:31,248 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-06 23:38:31,254 - AFC is enabled with max remote calls: 10.
+2026-03-06 23:38:31,422 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent "HTTP/1.1 429 Too Many Requests"
+2026-03-06 23:39:19,489 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-06 23:39:19,505 - AFC is enabled with max remote calls: 10.
+2026-03-06 23:39:23,520 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-03-07 00:33:27,677 - Processing document: bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf
+2026-03-07 00:33:27,696 - AFC is enabled with max remote calls: 10.
+2026-03-07 00:33:31,800 - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
