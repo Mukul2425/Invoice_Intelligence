@@ -1,10 +1,13 @@
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
-
+from categorization.categorize import categorize_invoice
 
 def save_invoice(data, file_path):
 
     session = SessionLocal()
+
+    vendor = data.get("vendor_name", "")
+    category = categorize_invoice(vendor)
 
     try:
 
@@ -18,7 +21,7 @@ def save_invoice(data, file_path):
 
         invoice = Invoice(
 
-            vendor_name=data["vendor_name"],
+            vendor_name=vendor,
             invoice_number=data["invoice_number"],
             invoice_date=data["invoice_date"],
             due_date=data["due_date"],
@@ -29,14 +32,13 @@ def save_invoice(data, file_path):
             payment_status=data["payment_status"],
 
             file_path=file_path,
-            category=""
-
+            category=category
         )
 
         session.add(invoice)
         session.commit()
 
-        for item in data["line_items"]:
+        for item in data.get("line_items", []):
 
             line_item = LineItem(
 
@@ -53,6 +55,11 @@ def save_invoice(data, file_path):
         session.commit()
 
         print("Invoice stored in database")
+
+    except Exception as e:
+
+        session.rollback()
+        print("Database error:", e)
 
     finally:
 
