@@ -88,17 +88,25 @@ Return only the category name.
 
 def categorize_invoice(vendor):
 
+    if not vendor:
+        return "Other"
+
     category = rule_based_category(vendor)
 
     if category:
         return category
 
-    return llm_category(vendor)
+    llm_result = llm_category(vendor)
+
+    if not llm_result:
+        return "Other"
+    
+    
+    return llm_result.strip()
 
 if __name__ == "__main__":
 
     vendor = "Amazon Web Services"
 
     category = categorize_invoice(vendor)
-
-    print("Category:", category)
+    
