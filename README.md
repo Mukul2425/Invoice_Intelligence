@@ -1,1 +1,145 @@
-# Invoice_Intelligence
+# Finance Automation — Bill & Invoice Intelligence
+
+An end-to-end automation system that reads invoices from email, extracts structured financial data using AI, stores it in a database, and generates expense analytics reports.
+
+---
+
+# Overview
+
+Companies receive invoices from many vendors in different formats.  
+This system automatically processes those invoices and produces structured financial insights.
+
+Pipeline:
+
+Email → Invoice Download → OCR/Text Extraction → AI Data Extraction → Categorization → Database Storage → Excel Analytics Report
+
+---
+
+# Features
+
+• Automatic email monitoring for invoice attachments  
+• OCR support for scanned invoices and images  
+• AI-powered data extraction using Gemini  
+• Fallback regex parser for reliability  
+• Expense categorization using rules + AI  
+• SQLite database storage with relational structure  
+• Excel report generation with charts
+
+---
+
+# Tech Stack
+
+Python  
+Gemini API  
+Tesseract OCR  
+PyMuPDF  
+SQLite + SQLAlchemy  
+OpenPyXL
+
+---
+
+# Project Structure
+invoice-intelligence/
+│
+├── main.py
+├── requirements.txt
+├── .env.example
+│
+├── email_monitor/
+├── document_processing/
+├── ai_extraction/
+├── categorization/
+├── database/
+├── reports/
+│
+├── bills/
+├── output/
+└── logs/
+
+
+---
+
+# Setup Instructions
+
+### 1 Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2 Install Tesseract OCR (Mac)
+
+```bash
+brew install tesseract
+```
+
+### 3 Install Poppler (for pdf2image) (Mac)
+
+```bash
+brew install poppler
+```
+
+### 4 Configure Environment Variables
+
+Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in:
+
+```
+EMAIL_ADDRESS=
+EMAIL_PASSWORD=
+GEMINI_API_KEY=
+```
+
+### Running the Pipeline
+
+```bash
+python main.py
+```
+
+This will:
+
+- Check email inbox for invoices
+- Download attachments
+- Extract invoice data using AI
+- Categorize expenses
+- Store data in SQLite database
+- Generate Excel expense report
+
+### Generated Output
+
+Excel report with:
+
+- Sheet 1 — Invoice list
+- Sheet 2 — Line items
+- Sheet 3 — Category summary + chart
+
+Location:
+
+`output/expense_report.xlsx`
+
+### Example Workflow
+
+Send an email containing a PDF invoice → The system automatically processes it and updates the expense report.
+
+### Known Limitations
+
+- Table extraction accuracy depends on invoice layout
+- OCR accuracy varies for low quality scans
+- Vendor categorization may require rule expansion
+
+### Future Improvements
+
+- Web dashboard for expense analytics
+- Vendor learning system for better categorization
+- Cloud storage integration
+- Email report delivery automation
+
+### Author
+
+Mukul Kumar
+
