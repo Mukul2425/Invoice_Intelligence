@@ -126,6 +126,17 @@ Location:
 
 Send an email containing a PDF invoice → The system automatically processes it and updates the expense report.
 
+## Initiative Features
+
+Beyond the assignment requirements, the system includes several production-style improvements:
+
+- Hybrid AI extraction pipeline with LLM + regex fallback
+- Hybrid expense categorization (rule-based + AI)
+- Duplicate invoice detection
+- Processing logs for traceability
+- Smart pipeline that skips already processed invoices
+- Automated Excel analytics report with charts
+
 ### Known Limitations
 
 - Table extraction accuracy depends on invoice layout

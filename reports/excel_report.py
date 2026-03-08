@@ -112,8 +112,9 @@ def generate_report():
 
     ws3.add_chart(chart, "E5")
     os.makedirs("output", exist_ok=True)
-
-    file_path = "output/expense_report.xlsx"
+    from datetime import datetime
+    date = datetime.now().strftime("%Y_%m")
+    file_path = f"output/expense_report_{date}.xlsx"
 
     wb.save(file_path)
 
