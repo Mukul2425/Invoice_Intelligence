@@ -43,6 +43,10 @@ def fetch_recent_emails(mail):
 
     return email_ids
 
+from datetime import datetime
+import os
+
+
 def save_attachment(file_data, filename):
 
     today = datetime.now().strftime("%Y-%m")
@@ -50,11 +54,12 @@ def save_attachment(file_data, filename):
 
     os.makedirs(folder, exist_ok=True)
 
-    filepath = os.path.join(folder, filename)
+    # create unique filename using timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
-    if os.path.exists(filepath):
-        print(f"File already exists, skipping: {filename}")
-        return
+    unique_filename = f"{timestamp}_{filename}"
+
+    filepath = os.path.join(folder, unique_filename)
 
     with open(filepath, "wb") as f:
         f.write(file_data)

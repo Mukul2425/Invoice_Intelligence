@@ -4,7 +4,7 @@ from openpyxl.chart import PieChart, Reference
 
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
-
+from openpyxl.worksheet.table import Table, TableStyleInfo
 def fetch_data():
 
     session = SessionLocal()
@@ -36,18 +36,30 @@ def generate_report():
     ]
 
     ws1.append(headers)
+    table = Table(displayName="InvoiceTable", ref=f"A1:G{len(invoices)+1}")
+
+    style = TableStyleInfo(
+        name="TableStyleMedium9",
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False,
+    )
+
+    table.tableStyleInfo = style
+    ws1.add_table(table)
 
     for inv in invoices:
 
-        ws1.append([
-            inv.vendor_name,
-            inv.invoice_number,
-            inv.invoice_date,
-            inv.due_date,
-            inv.total_amount,
-            inv.category,
-            inv.file_path
-        ])
+       ws1.append([
+        inv.vendor_name or "Unknown Vendor",
+        inv.invoice_number or "N/A",
+        inv.invoice_date or "N/A",
+        inv.due_date or "N/A",
+        inv.total_amount or 0,
+        inv.category or "Other",
+        inv.file_path or ""
+    ])
 
     ws2 = wb.create_sheet("Line Items")
 
@@ -72,24 +84,26 @@ def generate_report():
         ])
 
     ws3 = wb.create_sheet("Category Summary")
+
     category_totals = {}
 
     for inv in invoices:
 
         category = inv.category if inv.category else "Other"
+        total = inv.total_amount if inv.total_amount else 0
 
         if category not in category_totals:
             category_totals[category] = 0
 
-        category_totals[category] += inv.total_amount
+        category_totals[category] += total
 
-        ws3.append(["Category", "Total Spend"])
+
+    ws3.append(["Category", "Total Spend"])
 
     for category, total in category_totals.items():
-
         ws3.append([category, total])
 
-        chart = PieChart()
+    chart = PieChart()
 
     data = Reference(
         ws3,
@@ -111,6 +125,7 @@ def generate_report():
     chart.title = "Spend by Category"
 
     ws3.add_chart(chart, "E5")
+
     os.makedirs("output", exist_ok=True)
     from datetime import datetime
     date = datetime.now().strftime("%Y_%m")
