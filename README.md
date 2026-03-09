@@ -95,6 +95,15 @@ EMAIL_PASSWORD=
 GEMINI_API_KEY=
 ```
 
+#### (Optional) If using Gmail, generate an App Password
+
+1. Ensure 2-Step Verification is enabled for your Google account.
+2. Go to https://myaccount.google.com/security.
+3. Under "Signing in to Google" click **App passwords**.
+4. Select **Mail** as the app and **Other (Custom name)** (e.g., "Invoice Intelligence").
+5. Click **Generate**, then copy the 16‑character password.
+6. Use that value for `EMAIL_PASSWORD` in `.env`.
+
 ### Running the Pipeline
 
 ```bash
