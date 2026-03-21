@@ -1,11 +1,19 @@
 import os
 import json
 from google import genai
-from dotenv import load_dotenv
+from config.settings import get_settings
 
-load_dotenv()
+_client = None
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+def get_gemini_client():
+    global _client
+
+    if _client is None:
+        settings = get_settings()
+        _client = genai.Client(api_key=settings.gemini_api_key)
+
+    return _client
 
 
 def empty_invoice_schema():
@@ -66,7 +74,7 @@ def extract_with_llm(invoice_text):
 
         prompt = build_prompt(invoice_text)
 
-        response = client.models.generate_content(
+        response = get_gemini_client().models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )

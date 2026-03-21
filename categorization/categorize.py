@@ -49,12 +49,19 @@ def rule_based_category(vendor):
     return None
 
 from google import genai
-import os
-from dotenv import load_dotenv
+from config.settings import get_settings
 
-load_dotenv()
+_client = None
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+def get_gemini_client():
+    global _client
+
+    if _client is None:
+        settings = get_settings()
+        _client = genai.Client(api_key=settings.gemini_api_key)
+
+    return _client
 
 def llm_category(vendor):
 
@@ -75,7 +82,7 @@ Return only the category name.
 
     try:
 
-        response = client.models.generate_content(
+        response = get_gemini_client().models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
         )

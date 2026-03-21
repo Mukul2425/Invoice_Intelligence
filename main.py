@@ -9,9 +9,12 @@ from database.db import init_db, SessionLocal
 from database.models import Invoice
 
 from reports.excel_report import generate_report
+from config.settings import validate_startup_settings
 
 
 def setup():
+
+    validate_startup_settings()
 
     print("Initializing database...")
 

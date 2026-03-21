@@ -2,25 +2,21 @@ import imaplib
 import email
 import os
 from datetime import datetime
-from dotenv import load_dotenv
 import logging
+from config.settings import get_settings
 
 logging.basicConfig(
     filename="logs/processing.log",
     level=logging.INFO,
     format="%(asctime)s - %(message)s"
 )
-load_dotenv()
-
-EMAIL = os.getenv("EMAIL_ADDRESS")
-PASSWORD = os.getenv("EMAIL_PASSWORD")
-
-IMAP_SERVER = "imap.gmail.com"
 
 
 def connect_email():
-    mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-    mail.login(EMAIL, PASSWORD)
+    settings = get_settings()
+
+    mail = imaplib.IMAP4_SSL(settings.imap_server)
+    mail.login(settings.email_address, settings.email_password)
     return mail
 
 from datetime import datetime, timedelta
