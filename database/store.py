@@ -2,6 +2,23 @@ from database.db import SessionLocal
 from database.models import Invoice, LineItem
 from categorization.categorize import categorize_invoice
 
+
+def _is_duplicate_invoice(session, data, file_path):
+
+    invoice_number = (data.get("invoice_number") or "").strip()
+
+    if invoice_number:
+        existing = session.query(Invoice).filter_by(invoice_number=invoice_number).first()
+        if existing:
+            return True
+
+    existing_file = session.query(Invoice).filter_by(file_path=file_path).first()
+    if existing_file:
+        return True
+
+    return False
+
+
 def save_invoice(data, file_path):
 
     session = SessionLocal()
@@ -11,25 +28,23 @@ def save_invoice(data, file_path):
 
     try:
 
-        existing = session.query(Invoice).filter_by(
-            invoice_number=data["invoice_number"]
-        ).first()
-
-        if existing:
+        if _is_duplicate_invoice(session, data, file_path):
             print("Invoice already exists, skipping")
-            return
+            return "duplicate"
+
+        invoice_number = (data.get("invoice_number") or "").strip() or None
 
         invoice = Invoice(
 
             vendor_name=vendor,
-            invoice_number=data["invoice_number"],
-            invoice_date=data["invoice_date"],
-            due_date=data["due_date"],
+            invoice_number=invoice_number,
+            invoice_date=data.get("invoice_date", ""),
+            due_date=data.get("due_date", ""),
 
-            total_amount=float(data["total_amount"]) if data["total_amount"] else 0,
+            total_amount=float(data.get("total_amount")) if data.get("total_amount") else 0,
 
-            tax=data["tax"],
-            payment_status=data["payment_status"],
+            tax=data.get("tax", ""),
+            payment_status=data.get("payment_status", ""),
 
             file_path=file_path,
             category=category
@@ -55,11 +70,13 @@ def save_invoice(data, file_path):
         session.commit()
 
         print("Invoice stored in database")
+        return "stored"
 
     except Exception as e:
 
         session.rollback()
         print("Database error:", e)
+        return "error"
 
     finally:
 

@@ -5,8 +5,7 @@ from document_processing.document_reader import read_document
 from ai_extraction.extractor import extract_invoice_data
 
 from database.store import save_invoice
-from database.db import init_db, SessionLocal
-from database.models import Invoice
+from database.db import init_db
 
 from reports.excel_report import generate_report
 from config.settings import validate_startup_settings
@@ -35,16 +34,7 @@ def process_invoices():
 
             path = os.path.join(root, file)
 
-            session = SessionLocal()
-
             try:
-
-                existing = session.query(Invoice).filter_by(file_path=path).first()
-
-                if existing:
-                    print("Invoice already processed:", path)
-                    skipped += 1
-                    continue
 
                 print("\nProcessing invoice:", path)
 
@@ -54,17 +44,16 @@ def process_invoices():
 
                 data = extract_invoice_data(text)
 
-                save_invoice(data, path)
+                status = save_invoice(data, path)
 
-                stored += 1
+                if status == "stored":
+                    stored += 1
+                elif status == "duplicate":
+                    skipped += 1
 
             except Exception as e:
 
                 print("Processing failed:", e)
-
-            finally:
-
-                session.close()
 
     print("\n----- Processing Summary -----")
     print(f"Invoices processed: {processed}")
