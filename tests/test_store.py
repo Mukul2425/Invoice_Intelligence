@@ -58,7 +58,12 @@ class TestStoreSaveInvoice(unittest.TestCase):
             "tax": "USD 50.25",
             "payment_status": "unpaid",
             "line_items": [
-                {"description": "Service", "quantity": "1", "unit_price": "$100.50", "item_total": "$100.50"}
+                {
+                    "description": "Service",
+                    "quantity": "1",
+                    "unit_price": "$100.50",
+                    "item_total": "$100.50",
+                }
             ],
         }
 

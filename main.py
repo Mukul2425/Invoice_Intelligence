@@ -1,18 +1,15 @@
-import os
 import logging
+import os
 
-from email_monitor.email_reader import process_emails
-from document_processing.document_reader import read_document
 from ai_extraction.extractor import extract_invoice_data
-
-from database.store import save_invoice
-from database.db import init_db
-from database.processing_state import should_process_file, mark_file_processed
-
-from reports.excel_report import generate_report
-from config.settings import validate_startup_settings
 from config.logging_config import setup_logging
-
+from config.settings import validate_startup_settings
+from database.db import init_db
+from database.processing_state import mark_file_processed, should_process_file
+from database.store import save_invoice
+from document_processing.document_reader import read_document
+from email_monitor.email_reader import process_emails
+from reports.excel_report import generate_report
 
 logger = logging.getLogger(__name__)
 

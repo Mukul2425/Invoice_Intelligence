@@ -1,12 +1,13 @@
-import imaplib
 import email
+import imaplib
+import logging
 import os
 from datetime import datetime, timedelta
-import logging
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from config.settings import get_settings
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from config.logging_config import setup_logging
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -113,11 +114,17 @@ def process_emails():
                         filename = part.get_filename()
                         allowed_extensions = [".pdf", ".png", ".jpg", ".jpeg"]
 
-                        if filename and any(filename.lower().endswith(ext) for ext in allowed_extensions):
+                        is_allowed = filename and any(
+                            filename.lower().endswith(ext) for ext in allowed_extensions
+                        )
+                        if is_allowed:
 
                             file_data = part.get_payload(decode=True)
                             if not file_data:
-                                logger.warning("[EMAIL] Empty attachment payload skipped: %s", filename)
+                                logger.warning(
+                                    "[EMAIL] Empty attachment payload skipped: %s",
+                                    filename,
+                                )
                                 continue
 
                             file_size = len(file_data)

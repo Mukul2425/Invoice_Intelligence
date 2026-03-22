@@ -1,12 +1,13 @@
-import os
 import json
 import logging
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
-from google import genai
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeoutError
 
-from config.settings import get_settings
+from google import genai
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from config.logging_config import setup_logging
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +143,7 @@ def parse_llm_json(response_text):
     except Exception as e:
         logger.warning("[EXTRACT] LLM JSON parsing failed: %s", e)
         return None
-    
+
 def validate_invoice(data):
 
     if not data:
@@ -188,11 +189,11 @@ def extract_invoice_data(invoice_text):
 
         from ai_extraction.fallback_parser import regex_fallback
         return regex_fallback(invoice_text)
-    
+
 if __name__ == "__main__":
 
-    from document_processing.document_reader import read_document
     from database.store import save_invoice
+    from document_processing.document_reader import read_document
 
     sample_file = "bills/2026-03/wordpress-pdf-invoice-plugin-sample.pdf"
 

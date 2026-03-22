@@ -1,3 +1,7 @@
+from google import genai
+
+from config.settings import get_settings
+
 CATEGORY_RULES = {
 
     "Tools & Software": [
@@ -78,9 +82,6 @@ def rule_based_category(vendor):
 
     return None
 
-from google import genai
-from config.settings import get_settings
-
 _client = None
 
 
@@ -119,9 +120,9 @@ Return only the category name.
 
         return response.text.strip()
 
-    except:
+    except Exception:
         return "Other"
-    
+
 
 def categorize_invoice(vendor):
 
@@ -137,7 +138,7 @@ def categorize_invoice(vendor):
 
     if not llm_result:
         return "Other"
-    
+
     return _normalize_category(llm_result.strip())
 
 if __name__ == "__main__":
@@ -145,4 +146,3 @@ if __name__ == "__main__":
     vendor = "Amazon Web Services"
 
     category = categorize_invoice(vendor)
-    

@@ -1,10 +1,13 @@
 import os
+
 from openpyxl import Workbook
 from openpyxl.chart import PieChart, Reference
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
-from openpyxl.worksheet.table import Table, TableStyleInfo
+
+
 def fetch_data():
 
     session = SessionLocal()

@@ -2,9 +2,9 @@ import logging
 import re
 from datetime import datetime
 
+from categorization.categorize import categorize_invoice
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
-from categorization.categorize import categorize_invoice
 
 logger = logging.getLogger(__name__)
 

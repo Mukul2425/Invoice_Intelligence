@@ -1,9 +1,10 @@
+import logging
 import os
+
 import fitz
 import pytesseract
-from PIL import Image
 from pdf2image import convert_from_path
-import logging
+from PIL import Image
 
 from config.logging_config import setup_logging
 
@@ -71,7 +72,7 @@ def read_document(file_path):
 
         if len(text.strip()) < 50:
             logger.info("[DOC] PDF appears scanned, running OCR")
-            
+
             logger.info("[DOC] OCR triggered for scanned PDF")
             text = ocr_pdf(file_path)
 
