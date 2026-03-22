@@ -110,6 +110,13 @@ GEMINI_API_KEY=
 python main.py
 ```
 
+### Running Tests
+
+```bash
+source venv/bin/activate
+python -m unittest discover -s tests -v
+```
+
 This will:
 
 - Check email inbox for invoices
