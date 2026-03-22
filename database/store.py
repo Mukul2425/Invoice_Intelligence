@@ -1,6 +1,10 @@
+import logging
+
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
 from categorization.categorize import categorize_invoice
+
+logger = logging.getLogger(__name__)
 
 
 def _is_duplicate_invoice(session, data, file_path):
@@ -29,7 +33,7 @@ def save_invoice(data, file_path):
     try:
 
         if _is_duplicate_invoice(session, data, file_path):
-            print("Invoice already exists, skipping")
+            logger.info("[DB] Invoice already exists, skipping: %s", file_path)
             return "duplicate"
 
         invoice_number = (data.get("invoice_number") or "").strip() or None
@@ -69,13 +73,13 @@ def save_invoice(data, file_path):
 
         session.commit()
 
-        print("Invoice stored in database")
+        logger.info("[DB] Invoice stored in database: %s", file_path)
         return "stored"
 
     except Exception as e:
 
         session.rollback()
-        print("Database error:", e)
+        logger.exception("[DB] Database error for %s: %s", file_path, e)
         return "error"
 
     finally:

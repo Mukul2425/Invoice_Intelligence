@@ -1,15 +1,13 @@
 import imaplib
 import email
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
-from config.settings import get_settings
 
-logging.basicConfig(
-    filename="logs/processing.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s"
-)
+from config.settings import get_settings
+from config.logging_config import setup_logging
+
+logger = logging.getLogger(__name__)
 
 
 def connect_email():
@@ -17,11 +15,8 @@ def connect_email():
 
     mail = imaplib.IMAP4_SSL(settings.imap_server)
     mail.login(settings.email_address, settings.email_password)
+    logger.info("[EMAIL] Connected to IMAP server")
     return mail
-
-from datetime import datetime, timedelta
-
-from datetime import datetime, timedelta
 
 def fetch_recent_emails(mail):
 
@@ -29,18 +24,15 @@ def fetch_recent_emails(mail):
 
     since_date = (datetime.now() - timedelta(days=2)).strftime("%d-%b-%Y")
 
-    print("Searching emails since:", since_date)
+    logger.info("[EMAIL] Searching emails since: %s", since_date)
 
     status, messages = mail.search(None, 'SINCE', since_date)
 
     email_ids = messages[0].split()
 
-    print("Emails found:", len(email_ids))
+    logger.info("[EMAIL] Emails found: %s", len(email_ids))
 
     return email_ids
-
-from datetime import datetime
-import os
 
 
 def save_attachment(file_data, filename):
@@ -60,34 +52,54 @@ def save_attachment(file_data, filename):
     with open(filepath, "wb") as f:
         f.write(file_data)
 
-    print(f"Saved attachment: {filepath}")
+    logger.info("[EMAIL] Saved attachment: %s", filepath)
 
 def process_emails():
+    setup_logging()
+
     mail = connect_email()
     email_ids = fetch_recent_emails(mail)
 
-    for e_id in email_ids:
-        status, msg_data = mail.fetch(e_id, "(RFC822)")
+    try:
+        for e_id in email_ids:
+            status, msg_data = mail.fetch(e_id, "(RFC822)")
 
-        for response_part in msg_data:
-            if isinstance(response_part, tuple):
+            if status != "OK":
+                logger.warning("[EMAIL] Failed to fetch email id: %s", e_id)
+                continue
 
-                msg = email.message_from_bytes(response_part[1])
-                for part in msg.walk():
+            for response_part in msg_data:
+                if isinstance(response_part, tuple):
 
-                    filename = part.get_filename()
-                    allowed_extensions = [".pdf", ".png", ".jpg", ".jpeg"]
+                    msg = email.message_from_bytes(response_part[1])
+                    for part in msg.walk():
 
-                    if filename and any(filename.lower().endswith(ext) for ext in allowed_extensions):
+                        filename = part.get_filename()
+                        allowed_extensions = [".pdf", ".png", ".jpg", ".jpeg"]
 
-                        file_data = part.get_payload(decode=True)
-                        file_size = len(file_data)
+                        if filename and any(filename.lower().endswith(ext) for ext in allowed_extensions):
 
-                        if file_size < 5000:
-                            print("Skipping small file:", filename)
-                            continue
+                            file_data = part.get_payload(decode=True)
+                            if not file_data:
+                                logger.warning("[EMAIL] Empty attachment payload skipped: %s", filename)
+                                continue
 
-                        save_attachment(file_data, filename)
+                            file_size = len(file_data)
+
+                            if file_size < 5000:
+                                logger.info("[EMAIL] Skipping small file: %s", filename)
+                                continue
+
+                            save_attachment(file_data, filename)
+    except Exception as e:
+        logger.exception("[EMAIL] Email processing failed: %s", e)
+        raise
+    finally:
+        try:
+            mail.logout()
+            logger.info("[EMAIL] Logged out from IMAP")
+        except Exception:
+            logger.warning("[EMAIL] Failed to logout cleanly")
 
 if __name__ == "__main__":
     process_emails()

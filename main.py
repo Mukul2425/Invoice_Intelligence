@@ -1,4 +1,5 @@
 import os
+import logging
 
 from email_monitor.email_reader import process_emails
 from document_processing.document_reader import read_document
@@ -9,13 +10,19 @@ from database.db import init_db
 
 from reports.excel_report import generate_report
 from config.settings import validate_startup_settings
+from config.logging_config import setup_logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def setup():
 
+    setup_logging()
+
     validate_startup_settings()
 
-    print("Initializing database...")
+    logger.info("[SETUP] Initializing database")
 
     init_db()
 
@@ -35,8 +42,7 @@ def process_invoices():
             path = os.path.join(root, file)
 
             try:
-
-                print("\nProcessing invoice:", path)
+                logger.info("[PIPELINE] Processing invoice: %s", path)
 
                 processed += 1
 
@@ -52,31 +58,30 @@ def process_invoices():
                     skipped += 1
 
             except Exception as e:
+                logger.exception("[PIPELINE] Processing failed for %s: %s", path, e)
 
-                print("Processing failed:", e)
-
-    print("\n----- Processing Summary -----")
-    print(f"Invoices processed: {processed}")
-    print(f"New invoices stored: {stored}")
-    print(f"Duplicates skipped: {skipped}")
+    logger.info("[PIPELINE] ----- Processing Summary -----")
+    logger.info("[PIPELINE] Invoices processed: %s", processed)
+    logger.info("[PIPELINE] New invoices stored: %s", stored)
+    logger.info("[PIPELINE] Duplicates skipped: %s", skipped)
 
 
 def main():
 
-    print("\n----- Invoice Intelligence Pipeline -----\n")
-
     setup()
 
-    print("\nChecking email for invoices...\n")
+    logger.info("[PIPELINE] ----- Invoice Intelligence Pipeline -----")
+
+    logger.info("[EMAIL] Checking email for invoices")
     process_emails()
 
-    print("\nProcessing downloaded invoices...\n")
+    logger.info("[PIPELINE] Processing downloaded invoices")
     process_invoices()
 
-    print("\nGenerating expense report...\n")
+    logger.info("[REPORT] Generating expense report")
     generate_report()
 
-    print("\nPipeline completed successfully.\n")
+    logger.info("[PIPELINE] Pipeline completed successfully")
 
 
 if __name__ == "__main__":

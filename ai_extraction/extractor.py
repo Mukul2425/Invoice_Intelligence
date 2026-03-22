@@ -1,7 +1,12 @@
 import os
 import json
+import logging
 from google import genai
+
 from config.settings import get_settings
+from config.logging_config import setup_logging
+
+logger = logging.getLogger(__name__)
 
 _client = None
 
@@ -70,6 +75,8 @@ Invoice text:
 
 def extract_with_llm(invoice_text):
 
+    setup_logging()
+
     try:
 
         prompt = build_prompt(invoice_text)
@@ -82,8 +89,7 @@ def extract_with_llm(invoice_text):
         return response.text
 
     except Exception as e:
-
-        print("LLM request failed:", e)
+        logger.exception("[EXTRACT] LLM request failed: %s", e)
 
         return None
 
@@ -110,8 +116,7 @@ def parse_llm_json(response_text):
         return data
 
     except Exception as e:
-
-        print("LLM JSON parsing failed:", e)
+        logger.warning("[EXTRACT] LLM JSON parsing failed: %s", e)
         return None
     
 def validate_invoice(data):
@@ -141,23 +146,21 @@ def extract_invoice_data(invoice_text):
     llm_output = extract_with_llm(invoice_text)
 
     if not llm_output:
-        print("LLM failed — using fallback parser")
+        logger.warning("[EXTRACT] LLM failed, using fallback parser")
         from ai_extraction.fallback_parser import regex_fallback
         return regex_fallback(invoice_text)
 
     parsed = parse_llm_json(llm_output)
 
     if validate_invoice(parsed):
-
-        print("LLM extraction successful")
+        logger.info("[EXTRACT] LLM extraction successful")
 
         parsed = normalize_values(parsed)
 
         return parsed
 
     else:
-
-        print("LLM extraction incomplete — fallback needed")
+        logger.warning("[EXTRACT] LLM extraction incomplete, fallback needed")
 
         from ai_extraction.fallback_parser import regex_fallback
         return regex_fallback(invoice_text)
