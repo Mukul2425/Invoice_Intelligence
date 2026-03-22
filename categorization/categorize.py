@@ -35,6 +35,36 @@ CATEGORY_RULES = {
     ]
 }
 
+ALLOWED_CATEGORIES = [
+    "Office Expenses",
+    "Tools & Software",
+    "Travel & Petrol",
+    "Utilities",
+    "Other",
+]
+
+NORMALIZED_CATEGORY_LOOKUP = {
+    "officeexpenses": "Office Expenses",
+    "toolssoftware": "Tools & Software",
+    "travelpetrol": "Travel & Petrol",
+    "utilities": "Utilities",
+    "other": "Other",
+}
+
+
+def _normalize_category(value):
+    if not value:
+        return "Other"
+
+    lowered = value.lower().replace(" and ", " ").replace("&", " ")
+    clean = "".join(ch for ch in lowered if ch.isalpha())
+    normalized = NORMALIZED_CATEGORY_LOOKUP.get(clean)
+
+    if normalized:
+        return normalized
+
+    return "Other"
+
 def rule_based_category(vendor):
 
     vendor = vendor.lower()
@@ -101,15 +131,14 @@ def categorize_invoice(vendor):
     category = rule_based_category(vendor)
 
     if category:
-        return category
+        return _normalize_category(category)
 
     llm_result = llm_category(vendor)
 
     if not llm_result:
         return "Other"
     
-    
-    return llm_result.strip()
+    return _normalize_category(llm_result.strip())
 
 if __name__ == "__main__":
 

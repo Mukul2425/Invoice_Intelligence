@@ -15,6 +15,14 @@ class TestCategorization(unittest.TestCase):
     def test_llm_used_when_rule_misses(self, _mock_llm):
         self.assertEqual(categorize_invoice("Unknown Vendor"), "Utilities")
 
+    @patch("categorization.categorize.llm_category", return_value="tools and software")
+    def test_llm_output_is_normalized_to_allowed_category(self, _mock_llm):
+        self.assertEqual(categorize_invoice("Custom SaaS Vendor"), "Tools & Software")
+
+    @patch("categorization.categorize.llm_category", return_value="Random Category")
+    def test_unknown_llm_output_defaults_to_other(self, _mock_llm):
+        self.assertEqual(categorize_invoice("Unknown Vendor"), "Other")
+
 
 if __name__ == "__main__":
     unittest.main()
