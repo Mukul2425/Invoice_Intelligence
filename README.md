@@ -95,6 +95,15 @@ EMAIL_PASSWORD=
 GEMINI_API_KEY=
 ```
 
+Optional resilience settings:
+
+```
+IMAP_TIMEOUT_SECONDS=20
+IMAP_RETRY_ATTEMPTS=3
+LLM_TIMEOUT_SECONDS=30
+LLM_RETRY_ATTEMPTS=3
+```
+
 #### (Optional) If using Gmail, generate an App Password
 
 1. Ensure 2-Step Verification is enabled for your Google account.

@@ -1,7 +1,9 @@
 import os
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from google import genai
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from config.settings import get_settings
 from config.logging_config import setup_logging
@@ -73,6 +75,31 @@ Invoice text:
 """
     return prompt
 
+
+def _generate_content(prompt):
+    return get_gemini_client().models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+
+
+def _request_with_timeout(prompt):
+    timeout_seconds = get_settings().llm_timeout_seconds
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(_generate_content, prompt)
+        return future.result(timeout=timeout_seconds)
+
+
+@retry(
+    stop=stop_after_attempt(get_settings().llm_retry_attempts),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type((FutureTimeoutError, TimeoutError, RuntimeError, Exception)),
+    reraise=True,
+)
+def _extract_with_retry(prompt):
+    return _request_with_timeout(prompt)
+
 def extract_with_llm(invoice_text):
 
     setup_logging()
@@ -81,10 +108,7 @@ def extract_with_llm(invoice_text):
 
         prompt = build_prompt(invoice_text)
 
-        response = get_gemini_client().models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+        response = _extract_with_retry(prompt)
 
         return response.text
 

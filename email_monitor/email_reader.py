@@ -3,6 +3,7 @@ import email
 import os
 from datetime import datetime, timedelta
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from config.settings import get_settings
 from config.logging_config import setup_logging
@@ -10,29 +11,64 @@ from config.logging_config import setup_logging
 logger = logging.getLogger(__name__)
 
 
+@retry(
+    stop=stop_after_attempt(get_settings().imap_retry_attempts),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+    retry=retry_if_exception_type((imaplib.IMAP4.error, OSError, TimeoutError, RuntimeError)),
+    reraise=True,
+)
+def _connect_email_with_retry(settings):
+    mail = imaplib.IMAP4_SSL(settings.imap_server, timeout=settings.imap_timeout_seconds)
+    mail.login(settings.email_address, settings.email_password)
+    return mail
+
+
 def connect_email():
     settings = get_settings()
 
-    mail = imaplib.IMAP4_SSL(settings.imap_server)
-    mail.login(settings.email_address, settings.email_password)
+    mail = _connect_email_with_retry(settings)
     logger.info("[EMAIL] Connected to IMAP server")
     return mail
 
-def fetch_recent_emails(mail):
 
+@retry(
+    stop=stop_after_attempt(get_settings().imap_retry_attempts),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+    retry=retry_if_exception_type((imaplib.IMAP4.error, OSError, TimeoutError, RuntimeError)),
+    reraise=True,
+)
+def _search_recent_email_ids(mail, since_date):
     mail.select("inbox")
+    status, messages = mail.search(None, "SINCE", since_date)
 
+    if status != "OK":
+        raise RuntimeError("IMAP search failed")
+
+    return messages[0].split()
+
+def fetch_recent_emails(mail):
     since_date = (datetime.now() - timedelta(days=2)).strftime("%d-%b-%Y")
 
     logger.info("[EMAIL] Searching emails since: %s", since_date)
 
-    status, messages = mail.search(None, 'SINCE', since_date)
-
-    email_ids = messages[0].split()
+    email_ids = _search_recent_email_ids(mail, since_date)
 
     logger.info("[EMAIL] Emails found: %s", len(email_ids))
 
     return email_ids
+
+
+@retry(
+    stop=stop_after_attempt(get_settings().imap_retry_attempts),
+    wait=wait_exponential(multiplier=1, min=1, max=8),
+    retry=retry_if_exception_type((imaplib.IMAP4.error, OSError, TimeoutError, RuntimeError)),
+    reraise=True,
+)
+def _fetch_email(mail, email_id):
+    status, msg_data = mail.fetch(email_id, "(RFC822)")
+    if status != "OK":
+        raise RuntimeError(f"Failed to fetch email id: {email_id}")
+    return msg_data
 
 
 def save_attachment(file_data, filename):
@@ -62,10 +98,10 @@ def process_emails():
 
     try:
         for e_id in email_ids:
-            status, msg_data = mail.fetch(e_id, "(RFC822)")
-
-            if status != "OK":
-                logger.warning("[EMAIL] Failed to fetch email id: %s", e_id)
+            try:
+                msg_data = _fetch_email(mail, e_id)
+            except Exception as fetch_error:
+                logger.warning("[EMAIL] Skipping email id after retries %s: %s", e_id, fetch_error)
                 continue
 
             for response_part in msg_data:
