@@ -1,200 +1,183 @@
-# Finance Automation — Bill & Invoice Intelligence
+# Invoice Intelligence
 
-An end-to-end automation system that reads invoices from email, extracts structured financial data using AI, stores it in a database, and generates expense analytics reports.
+Automated invoice ingestion and analytics pipeline that reads attachments from email, extracts structured finance data with OCR + AI, stores records in SQLite, and generates a business-ready Excel report.
 
----
+## Why This Project Matters
 
-# Overview
+Finance teams lose time manually collecting invoice details from mixed formats like scanned PDFs, image receipts, and digital invoices.
 
-Companies receive invoices from many vendors in different formats.  
-This system automatically processes those invoices and produces structured financial insights.
+This project turns that manual workflow into an automated pipeline:
 
-Pipeline:
+Email Inbox -> Attachment Download -> OCR/Text Extraction -> AI + Regex Parsing -> Categorization -> Database Storage -> Excel Report
 
-Email → Invoice Download → OCR/Text Extraction → AI Data Extraction → Categorization → Database Storage → Excel Analytics Report
+## Highlights
 
----
+- Automated email monitoring for invoice attachments
+- OCR support for image-based and scanned invoices
+- AI extraction using Gemini with regex fallback
+- Rule-based + AI vendor categorization
+- Duplicate protection and incremental file processing
+- Structured logging, retry, timeout, and backoff support
+- Excel summary report with category-level spend visualization
+- Unit tests and CI checks on push and pull request
 
-# Features
+## Architecture
 
-• Automatic email monitoring for invoice attachments  
-• OCR support for scanned invoices and images  
-• AI-powered data extraction using Gemini  
-• Fallback regex parser for reliability  
-• Expense categorization using rules + AI  
-• SQLite database storage with relational structure  
-• Excel report generation with charts
+```mermaid
+flowchart LR
+	A[Email Inbox] --> B[email_monitor]
+	B --> C[bills/YYYY-MM attachments]
+	C --> D[document_processing]
+	D --> E[ai_extraction]
+	E --> F[categorization]
+	F --> G[database]
+	G --> H[reports/excel_report]
+	H --> I[output/expense_report_YYYY_MM.xlsx]
+```
 
----
+## Project Structure
 
-# Tech Stack
+```text
+Invoice_Intelligence/
+|- main.py
+|- requirements.txt
+|- .env.example
+|- README.md
+|- Project_Readme.md
+|- config/
+|  |- settings.py
+|  |- logging_config.py
+|- email_monitor/
+|  |- email_reader.py
+|- document_processing/
+|  |- document_reader.py
+|- ai_extraction/
+|  |- extractor.py
+|  |- fallback_parser.py
+|- categorization/
+|  |- categorize.py
+|- database/
+|  |- db.py
+|  |- models.py
+|  |- store.py
+|  |- processing_state.py
+|- reports/
+|  |- excel_report.py
+|- tests/
+|  |- test_categorization.py
+|  |- test_fallback_parser.py
+|  |- test_processing_state.py
+|  |- test_store.py
+|- logs/
+|- bills/
+|- output/
+|- .github/workflows/python-ci.yml
+```
 
-Python  
-Gemini API  
-Tesseract OCR  
-PyMuPDF  
-SQLite + SQLAlchemy  
-OpenPyXL
+## Quick Start
 
----
-
-# Project Structure
-invoice-intelligence/
-│
-├── main.py
-├── requirements.txt
-├── .env.example
-│
-├── email_monitor/
-├── document_processing/
-├── ai_extraction/
-├── categorization/
-├── database/
-├── reports/
-│
-├── bills/
-├── output/
-└── logs/
-
-
----
-
-# Setup Instructions
-
-### 1 Install Dependencies
+### 1. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2 Install Tesseract OCR (Mac)
+### 2. Install OCR System Dependencies (macOS)
 
 ```bash
-brew install tesseract
+brew install tesseract poppler
 ```
 
-### 3 Install Poppler (for pdf2image) (Mac)
-
-```bash
-brew install poppler
-```
-
-### 4 Configure Environment Variables
-
-Copy the example file:
+### 3. Configure Environment Variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and fill in:
+Edit .env with:
 
-```
-EMAIL_ADDRESS=
-EMAIL_PASSWORD=
-GEMINI_API_KEY=
-```
+```env
+EMAIL_ADDRESS=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+GEMINI_API_KEY=your_gemini_api_key
 
-Optional resilience settings:
-
-```
+# Optional resilience tuning
 IMAP_TIMEOUT_SECONDS=20
 IMAP_RETRY_ATTEMPTS=3
 LLM_TIMEOUT_SECONDS=30
 LLM_RETRY_ATTEMPTS=3
 ```
 
-#### (Optional) If using Gmail, generate an App Password
-
-1. Ensure 2-Step Verification is enabled for your Google account.
-2. Go to https://myaccount.google.com/security.
-3. Under "Signing in to Google" click **App passwords**.
-4. Select **Mail** as the app and **Other (Custom name)** (e.g., "Invoice Intelligence").
-5. Click **Generate**, then copy the 16‑character password.
-6. Use that value for `EMAIL_PASSWORD` in `.env`.
-
-### Running the Pipeline
+### 4. Run the Pipeline
 
 ```bash
 python main.py
 ```
 
-### Running Tests
+## Output
+
+Generated report path:
+
+```text
+output/expense_report_YYYY_MM.xlsx
+```
+
+Report contains:
+
+- Invoices sheet
+- Line Items sheet
+- Category Summary sheet with chart
+
+## Reliability Features
+
+- Centralized startup config validation
+- Retry with exponential backoff for IMAP and Gemini calls
+- Timeout controls via environment variables
+- Structured, stage-based logging
+- Duplicate protection in storage layer
+- Incremental processing using file fingerprint (mtime + size)
+
+## Testing
+
+Run unit tests:
 
 ```bash
-source venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-### CI Automation
-
-GitHub Actions now runs the test suite on every push and pull request using Python 3.11 and 3.12.
-It also runs Ruff lint checks.
-
-Workflow file:
-
-- .github/workflows/python-ci.yml
-
-### Linting
+Run lint checks:
 
 ```bash
 ruff check .
 ```
 
-This will:
+## CI
 
-- Check email inbox for invoices
-- Download attachments
-- Extract invoice data using AI
-- Categorize expenses
-- Store data in SQLite database
-- Generate Excel expense report
+GitHub Actions workflow runs automatically on push and pull request:
 
-Pipeline optimization:
+- Lint job (Ruff)
+- Test job (Python 3.11 and 3.12)
 
-- The pipeline now tracks file fingerprints (mtime + size) and skips unchanged invoice files on later runs.
+Workflow file:
 
-### Generated Output
+```text
+.github/workflows/python-ci.yml
+```
 
-Excel report with:
+## Known Limitations
 
-- Sheet 1 — Invoice list
-- Sheet 2 — Line items
-- Sheet 3 — Category summary + chart
+- OCR quality depends on invoice image quality
+- Layout-heavy invoice tables may need stronger parser heuristics
+- Vendor category accuracy improves with richer keyword rules
 
-Location:
+## Roadmap
 
-`output/expense_report.xlsx`
+- Dashboard view for expense analytics
+- Smarter vendor learning and category adaptation
+- Optional email summary delivery
+- Cloud object storage integration
 
-### Example Workflow
-
-Send an email containing a PDF invoice → The system automatically processes it and updates the expense report.
-
-## Initiative Features
-
-Beyond the assignment requirements, the system includes several production-style improvements:
-
-- Hybrid AI extraction pipeline with LLM + regex fallback
-- Hybrid expense categorization (rule-based + AI)
-- Duplicate invoice detection
-- Processing logs for traceability
-- Smart pipeline that skips already processed invoices
-- Automated Excel analytics report with charts
-
-### Known Limitations
-
-- Table extraction accuracy depends on invoice layout
-- OCR accuracy varies for low quality scans
-- Vendor categorization may require rule expansion
-
-### Future Improvements
-
-- Web dashboard for expense analytics
-- Vendor learning system for better categorization
-- Cloud storage integration
-- Email report delivery automation
-
-### Author
+## Author
 
 Mukul Kumar
 
