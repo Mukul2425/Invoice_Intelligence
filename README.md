@@ -126,6 +126,21 @@ source venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
+### CI Automation
+
+GitHub Actions now runs the test suite on every push and pull request using Python 3.11 and 3.12.
+It also runs Ruff lint checks.
+
+Workflow file:
+
+- .github/workflows/python-ci.yml
+
+### Linting
+
+```bash
+ruff check .
+```
+
 This will:
 
 - Check email inbox for invoices

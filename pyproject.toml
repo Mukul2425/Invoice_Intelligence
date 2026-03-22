@@ -1,0 +1,12 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+exclude = [
+  "venv",
+  ".venv",
+  "bills",
+  "output",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
