@@ -37,3 +37,14 @@ class LineItem(Base):
     item_total = Column(String)
 
     invoice = relationship("Invoice", back_populates="line_items")
+
+
+class ProcessedFile(Base):
+
+    __tablename__ = "processed_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_path = Column(String, unique=True, index=True)
+    fingerprint = Column(String)
+    last_status = Column(String)
+    processed_at = Column(String)

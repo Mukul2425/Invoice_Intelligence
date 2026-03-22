@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from database.db import Base
+from database.models import Invoice, LineItem
 from database.store import save_invoice
 
 
@@ -45,6 +46,40 @@ class TestStoreSaveInvoice(unittest.TestCase):
 
         self.assertEqual(status_first, "stored")
         self.assertEqual(status_second, "duplicate")
+
+    @patch("database.store.categorize_invoice", return_value="Other")
+    def test_normalizes_dates_amounts_and_status(self, _mock_category):
+        data = {
+            "vendor_name": "ACME",
+            "invoice_number": "INV-3001",
+            "invoice_date": "03/22/2026",
+            "due_date": "25/03/2026",
+            "total_amount": "$1,250.75",
+            "tax": "USD 50.25",
+            "payment_status": "unpaid",
+            "line_items": [
+                {"description": "Service", "quantity": "1", "unit_price": "$100.50", "item_total": "$100.50"}
+            ],
+        }
+
+        with patch("database.store.SessionLocal", self.test_session_local):
+            status = save_invoice(data, "bills/2026-03/file_norm.pdf")
+
+            session = self.test_session_local()
+            try:
+                invoice = session.query(Invoice).filter_by(invoice_number="INV-3001").first()
+                item = session.query(LineItem).filter_by(invoice_id=invoice.id).first()
+            finally:
+                session.close()
+
+        self.assertEqual(status, "stored")
+        self.assertEqual(invoice.invoice_date, "2026-03-22")
+        self.assertEqual(invoice.due_date, "2026-03-25")
+        self.assertEqual(invoice.total_amount, 1250.75)
+        self.assertEqual(invoice.tax, "50.25")
+        self.assertEqual(invoice.payment_status, "Pending")
+        self.assertEqual(item.unit_price, "100.5")
+        self.assertEqual(item.item_total, "100.5")
 
 
 if __name__ == "__main__":

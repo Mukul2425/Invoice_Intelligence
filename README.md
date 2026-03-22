@@ -135,6 +135,10 @@ This will:
 - Store data in SQLite database
 - Generate Excel expense report
 
+Pipeline optimization:
+
+- The pipeline now tracks file fingerprints (mtime + size) and skips unchanged invoice files on later runs.
+
 ### Generated Output
 
 Excel report with:

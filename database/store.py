@@ -1,10 +1,63 @@
 import logging
+import re
+from datetime import datetime
 
 from database.db import SessionLocal
 from database.models import Invoice, LineItem
 from categorization.categorize import categorize_invoice
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_amount(value, default=0.0):
+    if value is None:
+        return default
+
+    cleaned = re.sub(r"[^0-9.-]", "", str(value).replace(",", ""))
+    if cleaned in {"", ".", "-", "-."}:
+        return default
+
+    try:
+        return float(cleaned)
+    except ValueError:
+        return default
+
+
+def _normalize_date(value):
+    if not value:
+        return ""
+
+    text = str(value).strip()
+    formats = [
+        "%Y-%m-%d",
+        "%d-%m-%Y",
+        "%d/%m/%Y",
+        "%m/%d/%Y",
+        "%d/%m/%y",
+        "%m/%d/%y",
+        "%b %d, %Y",
+        "%B %d, %Y",
+    ]
+
+    for fmt in formats:
+        try:
+            return datetime.strptime(text, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+
+    return text
+
+
+def _normalize_payment_status(value):
+    lowered = (value or "").strip().lower()
+
+    if lowered in {"paid", "complete", "completed", "settled"}:
+        return "Paid"
+    if lowered in {"overdue", "late"}:
+        return "Overdue"
+    if lowered in {"pending", "unpaid", "due", "open"}:
+        return "Pending"
+    return ""
 
 
 def _is_duplicate_invoice(session, data, file_path):
@@ -42,13 +95,13 @@ def save_invoice(data, file_path):
 
             vendor_name=vendor,
             invoice_number=invoice_number,
-            invoice_date=data.get("invoice_date", ""),
-            due_date=data.get("due_date", ""),
+            invoice_date=_normalize_date(data.get("invoice_date", "")),
+            due_date=_normalize_date(data.get("due_date", "")),
 
-            total_amount=float(data.get("total_amount")) if data.get("total_amount") else 0,
+            total_amount=_normalize_amount(data.get("total_amount"), default=0.0),
 
-            tax=data.get("tax", ""),
-            payment_status=data.get("payment_status", ""),
+            tax=str(_normalize_amount(data.get("tax", ""), default=0.0)),
+            payment_status=_normalize_payment_status(data.get("payment_status", "")),
 
             file_path=file_path,
             category=category
@@ -64,8 +117,8 @@ def save_invoice(data, file_path):
                 invoice_id=invoice.id,
                 description=item.get("description"),
                 quantity=item.get("quantity"),
-                unit_price=item.get("unit_price"),
-                item_total=item.get("item_total")
+                unit_price=str(_normalize_amount(item.get("unit_price"), default=0.0)),
+                item_total=str(_normalize_amount(item.get("item_total"), default=0.0))
 
             )
 

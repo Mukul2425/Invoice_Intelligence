@@ -11,6 +11,6 @@ Base = declarative_base()
 
 def init_db():
 
-    from database.models import Invoice, LineItem
+    from database.models import Invoice, LineItem, ProcessedFile
 
     Base.metadata.create_all(bind=engine)

@@ -7,6 +7,7 @@ from ai_extraction.extractor import extract_invoice_data
 
 from database.store import save_invoice
 from database.db import init_db
+from database.processing_state import should_process_file, mark_file_processed
 
 from reports.excel_report import generate_report
 from config.settings import validate_startup_settings
@@ -42,6 +43,11 @@ def process_invoices():
             path = os.path.join(root, file)
 
             try:
+                if not should_process_file(path):
+                    logger.info("[PIPELINE] Skipping unchanged file: %s", path)
+                    skipped += 1
+                    continue
+
                 logger.info("[PIPELINE] Processing invoice: %s", path)
 
                 processed += 1
@@ -54,8 +60,10 @@ def process_invoices():
 
                 if status == "stored":
                     stored += 1
+                    mark_file_processed(path, status)
                 elif status == "duplicate":
                     skipped += 1
+                    mark_file_processed(path, status)
 
             except Exception as e:
                 logger.exception("[PIPELINE] Processing failed for %s: %s", path, e)
